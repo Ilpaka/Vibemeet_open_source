@@ -1,4 +1,4 @@
-# LiveKit server configuration — development profile.
+# LiveKit server configuration - development profile.
 # Reference: https://docs.livekit.io/home/self-hosting/config/
 
 port: 7880
@@ -6,7 +6,7 @@ bind_addresses:
   - 0.0.0.0
 
 rtc:
-  # Disable external IP discovery via STUN — node-ip is injected explicitly.
+  # Disable external IP discovery via STUN - node-ip is injected explicitly.
   use_external_ip: false
 
   # WebRTC media ports.

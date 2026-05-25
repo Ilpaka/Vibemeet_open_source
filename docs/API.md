@@ -199,11 +199,11 @@ bitrate, and a 0–100 network score.
 Distinct from the browser-native LiveKit screen-share track. These
 endpoints let the server broadcast its own display (kiosk / demo).
 
-- `POST /screen-share/offer` — SDP offer + answer exchange.
-- `POST /screen-share/ice/:id` — ICE candidate from the client.
-- `GET  /screen-share/ice/:id` — poll for server-side ICE candidates.
-- `POST /screen-share/hangup/:id` — terminate the session.
-- `GET  /screen-share/` — the bundled demo HTML page.
+- `POST /screen-share/offer` - SDP offer + answer exchange.
+- `POST /screen-share/ice/:id` - ICE candidate from the client.
+- `GET  /screen-share/ice/:id` - poll for server-side ICE candidates.
+- `POST /screen-share/hangup/:id` - terminate the session.
+- `GET  /screen-share/` - the bundled demo HTML page.
 
 ## Error responses
 

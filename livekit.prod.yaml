@@ -1,4 +1,4 @@
-# LiveKit server configuration — production profile.
+# LiveKit server configuration - production profile.
 # Reference: https://docs.livekit.io/home/self-hosting/config/
 
 port: 17880

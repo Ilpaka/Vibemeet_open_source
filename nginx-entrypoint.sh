@@ -18,7 +18,7 @@ while [ "$RETRY" -lt "$MAX_RETRIES" ]; do
 done
 
 if [ "$RETRY" -eq "$MAX_RETRIES" ]; then
-  echo "[nginx] backend port check failed after $MAX_RETRIES attempts — starting anyway"
+  echo "[nginx] backend port check failed after $MAX_RETRIES attempts - starting anyway"
 fi
 
 exec nginx -g "daemon off;"
