@@ -49,4 +49,3 @@ func (s *screenCaptureService) StopCapture() {
 }
 
 var ErrNoDisplayFound = errors.New("no display found")
-

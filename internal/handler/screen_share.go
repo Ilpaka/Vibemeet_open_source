@@ -120,11 +120,11 @@ func (h *ScreenShareHandler) HandleOffer(c *gin.Context) {
 	default:
 		h.log.Error("Invalid SDP type", "type", req.Type)
 		for _, track := range screenStream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 		if audioStream != nil {
 			for _, track := range audioStream.GetTracks() {
-				track.Close()
+				_ = track.Close()
 			}
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid SDP type"})
@@ -137,11 +137,11 @@ func (h *ScreenShareHandler) HandleOffer(c *gin.Context) {
 	if err != nil {
 		h.log.Error("Failed to create peer connection", "error", err)
 		for _, track := range screenStream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 		if audioStream != nil {
 			for _, track := range audioStream.GetTracks() {
-				track.Close()
+				_ = track.Close()
 			}
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create peer connection: " + err.Error()})
@@ -401,18 +401,18 @@ func (h *ScreenShareHandler) cleanup(peerConnectionID uuid.UUID, screenStream, a
 	h.mu.Unlock()
 
 	if exists && peerConnection != nil {
-		peerConnection.Close()
+		_ = peerConnection.Close()
 	}
 
 	if screenStream != nil {
 		for _, track := range screenStream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 	}
 
 	if audioStream != nil {
 		for _, track := range audioStream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 	}
 

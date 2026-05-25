@@ -31,7 +31,7 @@ func (r *rateLimitRepository) CheckLimit(ctx context.Context, key string, limit 
 		r.log.Error("Failed to check rate limit", "error", err)
 		return false, err
 	}
-	
+
 	return count < limit, nil
 }
 
@@ -41,11 +41,10 @@ func (r *rateLimitRepository) Increment(ctx context.Context, key string, window 
 		r.log.Error("Failed to increment rate limit", "error", err)
 		return 0, err
 	}
-	
+
 	if count == 1 {
 		r.redis.Expire(ctx, key, window)
 	}
-	
+
 	return count, nil
 }
-

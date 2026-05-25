@@ -18,7 +18,7 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
 	auditRepo repository.AuditRepository
 	log       logger.Logger
 }
@@ -69,4 +69,3 @@ func (s *userService) UpdateSettings(ctx context.Context, userID uuid.UUID, sett
 	settings.UpdatedAt = time.Now()
 	return s.userRepo.UpdateSettings(ctx, settings)
 }
-

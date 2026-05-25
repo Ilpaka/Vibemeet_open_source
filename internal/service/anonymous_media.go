@@ -113,9 +113,7 @@ func (s *anonymousMediaService) buildFrontendURL() string {
 			url = strings.Replace(url, "localhost", s.cfg.HostIP, 1)
 		}
 		// Replace the Docker hostname
-		if strings.Contains(url, "livekit:") {
-			url = strings.Replace(url, "livekit:", s.cfg.HostIP+":", 1)
-		}
+		url = strings.Replace(url, "livekit:", s.cfg.HostIP+":", 1)
 		return s.normalizeWSURL(url)
 	}
 
@@ -150,4 +148,3 @@ func (s *anonymousMediaService) normalizeWSURL(url string) string {
 
 	return url
 }
-

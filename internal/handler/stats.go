@@ -52,4 +52,3 @@ func (h *StatsHandler) GetParticipantStats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, stats)
 }
-

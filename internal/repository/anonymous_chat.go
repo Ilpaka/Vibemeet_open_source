@@ -18,9 +18,9 @@ const (
 	ChatTTL = 6 * time.Hour
 
 	// Redis key prefixes
-	ChatMessagesKeyPrefix = "chat:room:%s:messages"
+	ChatMessagesKeyPrefix     = "chat:room:%s:messages"
 	RoomParticipantsKeyPrefix = "room:%s:participants"
-	RoomMetaKeyPrefix = "room:%s:meta"
+	RoomMetaKeyPrefix         = "room:%s:meta"
 )
 
 type AnonymousChatRepository interface {
@@ -61,14 +61,14 @@ func (r *anonymousChatRepository) getMessagesKey(roomID uuid.UUID) string {
 
 func (r *anonymousChatRepository) SaveMessage(ctx context.Context, roomID uuid.UUID, message *domain.AnonymousChatMessage) error {
 	key := r.getMessagesKey(roomID)
-	
+
 	// Serialize the message to JSON
 	messageJSON, err := json.Marshal(message)
 	if err != nil {
 		r.log.Error("Failed to marshal message", "error", err)
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
-	
+
 	// Use the timestamp in milliseconds as the sort score
 	score := float64(message.CreatedAt.UnixMilli())
 
@@ -81,20 +81,20 @@ func (r *anonymousChatRepository) SaveMessage(ctx context.Context, roomID uuid.U
 		r.log.Error("Failed to save message to Redis", "error", err, "room_id", roomID)
 		return fmt.Errorf("failed to save message: %w", err)
 	}
-	
+
 	// Set the TTL on the key (6 hours)
 	err = r.rdb.Expire(ctx, key, ChatTTL).Err()
 	if err != nil {
 		r.log.Warn("Failed to set TTL on chat key", "error", err)
 		// Non-critical error, continue
 	}
-	
+
 	return nil
 }
 
 func (r *anonymousChatRepository) GetMessages(ctx context.Context, roomID uuid.UUID, limit int) ([]*domain.AnonymousChatMessage, error) {
 	key := r.getMessagesKey(roomID)
-	
+
 	// Fetch the latest N messages (newest to oldest)
 	// Use ZREVRANGE to retrieve them in reverse order
 	messagesJSON, err := r.rdb.ZRevRange(ctx, key, 0, int64(limit-1)).Result()
@@ -105,7 +105,7 @@ func (r *anonymousChatRepository) GetMessages(ctx context.Context, roomID uuid.U
 		r.log.Error("Failed to get messages from Redis", "error", err, "room_id", roomID)
 		return nil, fmt.Errorf("failed to get messages: %w", err)
 	}
-	
+
 	messages := make([]*domain.AnonymousChatMessage, 0, len(messagesJSON))
 	for _, msgJSON := range messagesJSON {
 		var message domain.AnonymousChatMessage
@@ -115,18 +115,18 @@ func (r *anonymousChatRepository) GetMessages(ctx context.Context, roomID uuid.U
 		}
 		messages = append(messages, &message)
 	}
-	
+
 	// Reverse the slice to get chronological order (oldest to newest)
 	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
 		messages[i], messages[j] = messages[j], messages[i]
 	}
-	
+
 	return messages, nil
 }
 
 func (r *anonymousChatRepository) GetMessagesAfter(ctx context.Context, roomID uuid.UUID, after time.Time, limit int) ([]*domain.AnonymousChatMessage, error) {
 	key := r.getMessagesKey(roomID)
-	
+
 	// Minimum score (timestamp in milliseconds)
 	minScore := float64(after.UnixMilli())
 
@@ -137,7 +137,7 @@ func (r *anonymousChatRepository) GetMessagesAfter(ctx context.Context, roomID u
 		Offset: 0,
 		Count:  int64(limit),
 	}).Result()
-	
+
 	if err != nil {
 		if err == redis.Nil {
 			return []*domain.AnonymousChatMessage{}, nil
@@ -145,7 +145,7 @@ func (r *anonymousChatRepository) GetMessagesAfter(ctx context.Context, roomID u
 		r.log.Error("Failed to get messages after time", "error", err, "room_id", roomID)
 		return nil, fmt.Errorf("failed to get messages: %w", err)
 	}
-	
+
 	messages := make([]*domain.AnonymousChatMessage, 0, len(messagesJSON))
 	for _, msgJSON := range messagesJSON {
 		var message domain.AnonymousChatMessage
@@ -155,13 +155,13 @@ func (r *anonymousChatRepository) GetMessagesAfter(ctx context.Context, roomID u
 		}
 		messages = append(messages, &message)
 	}
-	
+
 	return messages, nil
 }
 
 func (r *anonymousChatRepository) DeleteMessage(ctx context.Context, roomID uuid.UUID, messageID string) error {
 	key := r.getMessagesKey(roomID)
-	
+
 	// Fetch all messages and locate the target
 	messagesJSON, err := r.rdb.ZRange(ctx, key, 0, -1).Result()
 	if err != nil {
@@ -189,13 +189,13 @@ func (r *anonymousChatRepository) DeleteMessage(ctx context.Context, roomID uuid
 			return nil
 		}
 	}
-	
+
 	return errors.New("message not found")
 }
 
 func (r *anonymousChatRepository) UpdateMessage(ctx context.Context, roomID uuid.UUID, message *domain.AnonymousChatMessage) error {
 	key := r.getMessagesKey(roomID)
-	
+
 	// Fetch all messages and locate the target
 	messagesJSON, err := r.rdb.ZRange(ctx, key, 0, -1).Result()
 	if err != nil {
@@ -220,14 +220,14 @@ func (r *anonymousChatRepository) UpdateMessage(ctx context.Context, roomID uuid
 				r.log.Error("Failed to remove old message", "error", err)
 				return fmt.Errorf("failed to update message: %w", err)
 			}
-			
+
 			// Add the updated message
 			newMessageJSON, err := json.Marshal(message)
 			if err != nil {
 				r.log.Error("Failed to marshal updated message", "error", err)
 				return fmt.Errorf("failed to marshal message: %w", err)
 			}
-			
+
 			score := float64(message.CreatedAt.UnixMilli())
 			err = r.rdb.ZAdd(ctx, key, redis.Z{
 				Score:  score,
@@ -237,14 +237,14 @@ func (r *anonymousChatRepository) UpdateMessage(ctx context.Context, roomID uuid
 				r.log.Error("Failed to add updated message", "error", err)
 				return fmt.Errorf("failed to update message: %w", err)
 			}
-			
+
 			// Refresh the TTL
 			r.rdb.Expire(ctx, key, ChatTTL)
-			
+
 			return nil
 		}
 	}
-	
+
 	return errors.New("message not found")
 }
 
@@ -257,4 +257,3 @@ func (r *anonymousChatRepository) RoomExists(ctx context.Context, roomID uuid.UU
 	}
 	return exists > 0, nil
 }
-

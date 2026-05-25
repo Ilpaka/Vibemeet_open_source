@@ -32,4 +32,3 @@ func (s *rateLimitService) CheckLimit(ctx context.Context, key string, limit int
 func (s *rateLimitService) Increment(ctx context.Context, key string, windowSeconds int) (int64, error) {
 	return s.rateLimitRepo.Increment(ctx, key, time.Duration(windowSeconds)*time.Second)
 }
-

@@ -148,7 +148,7 @@ func (s *screenCaptureService) startCustomCapture(ctx context.Context) (mediadev
 	stream, err := mediadevices.NewMediaStream(track)
 	if err != nil {
 		cancel()
-		track.Close()
+		_ = track.Close()
 		s.log.Error("Failed to create media stream", "error", err)
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (s *screenCaptureService) StopCapture() {
 	if s.stream != nil {
 		// Close all tracks in the stream
 		for _, track := range s.stream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 	}
 }

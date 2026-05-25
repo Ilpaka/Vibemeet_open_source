@@ -42,4 +42,3 @@ func (s *auditService) LogEvent(ctx context.Context, actorUserID *uuid.UUID, act
 
 	return s.auditRepo.CreateLog(ctx, auditLog)
 }
-

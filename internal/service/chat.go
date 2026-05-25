@@ -123,4 +123,3 @@ func (s *chatService) DeleteMessage(ctx context.Context, messageID int64, userID
 
 	return s.chatRepo.DeleteMessage(ctx, messageID, *message.SenderParticipantID)
 }
-

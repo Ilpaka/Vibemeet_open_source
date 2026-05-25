@@ -7,19 +7,19 @@ import (
 )
 
 type Services struct {
-	Auth             AuthService
-	User             UserService
-	Room             RoomService
-	Chat             ChatService
-	Media            MediaService
-	AnonymousMedia   AnonymousMediaService
-	AnonymousRoom    AnonymousRoomService
-	Stats            StatsService
-	RateLimit        RateLimitService
-	Audit            AuditService
-	ScreenCapture    ScreenCaptureService
-	AudioCapture     AudioCaptureService
-	WebRTC           WebRTCService
+	Auth           AuthService
+	User           UserService
+	Room           RoomService
+	Chat           ChatService
+	Media          MediaService
+	AnonymousMedia AnonymousMediaService
+	AnonymousRoom  AnonymousRoomService
+	Stats          StatsService
+	RateLimit      RateLimitService
+	Audit          AuditService
+	ScreenCapture  ScreenCaptureService
+	AudioCapture   AudioCaptureService
+	WebRTC         WebRTCService
 }
 
 func NewServices(repos *repository.Repositories, cfg *config.Config, log logger.Logger) *Services {
@@ -36,7 +36,7 @@ func NewServices(repos *repository.Repositories, cfg *config.Config, log logger.
 		AudioCapture:  NewAudioCaptureService(log),
 		WebRTC:        NewWebRTCService(log),
 	}
-	
+
 	// Initialize anonymous services only if the AnonymousRoom repository is available
 	if repos.AnonymousRoom != nil {
 		log.Info("Creating AnonymousRoom service...")
@@ -47,7 +47,6 @@ func NewServices(repos *repository.Repositories, cfg *config.Config, log logger.
 	} else {
 		log.Warn("AnonymousRoom repository is nil, anonymous services not initialized")
 	}
-	
+
 	return services
 }
-

@@ -25,10 +25,10 @@ type RoomService interface {
 }
 
 type roomService struct {
-	roomRepo repository.RoomRepository
+	roomRepo  repository.RoomRepository
 	auditRepo repository.AuditRepository
-	cfg      *config.Config
-	log      logger.Logger
+	cfg       *config.Config
+	log       logger.Logger
 }
 
 func NewRoomService(roomRepo repository.RoomRepository, auditRepo repository.AuditRepository, cfg *config.Config, log logger.Logger) RoomService {
@@ -65,15 +65,17 @@ func (s *roomService) Create(ctx context.Context, hostUserID uuid.UUID, title st
 		return nil, errors.New("failed to create room")
 	}
 
-	// Audit
-	s.auditRepo.CreateLog(ctx, &domain.AuditLog{
+	// Audit; do not fail room creation on audit write failure.
+	if err := s.auditRepo.CreateLog(ctx, &domain.AuditLog{
 		EventTime:   time.Now(),
 		ActorUserID: &hostUserID,
 		ActorRole:   domain.ActorRoleHost,
 		RoomID:      &room.ID,
 		EventType:   domain.EventTypeRoomCreated,
 		Payload:     map[string]interface{}{"title": title},
-	})
+	}); err != nil {
+		s.log.Warn("Failed to write audit log", "event", domain.EventTypeRoomCreated, "error", err)
+	}
 
 	return room, nil
 }
@@ -229,15 +231,15 @@ func (s *roomService) CreateInvite(ctx context.Context, roomID uuid.UUID, userID
 	}
 
 	invite := &domain.RoomInvite{
-		ID:            uuid.New(),
-		RoomID:        roomID,
+		ID:              uuid.New(),
+		RoomID:          roomID,
 		CreatedByUserID: userID,
-		LinkToken:     uuid.New().String(),
-		Label:          label,
-		ExpiresAt:     expiresAt,
-		MaxUses:       maxUses,
-		UsedCount:     0,
-		CreatedAt:     time.Now(),
+		LinkToken:       uuid.New().String(),
+		Label:           label,
+		ExpiresAt:       expiresAt,
+		MaxUses:         maxUses,
+		UsedCount:       0,
+		CreatedAt:       time.Now(),
 	}
 
 	if err := s.roomRepo.CreateInvite(ctx, invite); err != nil {
@@ -250,4 +252,3 @@ func (s *roomService) CreateInvite(ctx context.Context, roomID uuid.UUID, userID
 func (s *roomService) GetParticipants(ctx context.Context, roomID uuid.UUID) ([]*domain.RoomParticipant, error) {
 	return s.roomRepo.GetParticipantsByRoom(ctx, roomID)
 }
-

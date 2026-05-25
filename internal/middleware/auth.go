@@ -51,4 +51,3 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

@@ -127,4 +127,3 @@ func (h *UserHandler) UpdateSettings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, currentSettings)
 }
-

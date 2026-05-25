@@ -7,14 +7,14 @@ import (
 )
 
 type Repositories struct {
-	User           UserRepository
-	Room           RoomRepository
-	AnonymousRoom  AnonymousRoomRepository
-	AnonymousChat  AnonymousChatRepository
-	Chat           ChatRepository
-	Stats          StatsRepository
-	Audit          AuditRepository
-	RateLimit      RateLimitRepository
+	User          UserRepository
+	Room          RoomRepository
+	AnonymousRoom AnonymousRoomRepository
+	AnonymousChat AnonymousChatRepository
+	Chat          ChatRepository
+	Stats         StatsRepository
+	Audit         AuditRepository
+	RateLimit     RateLimitRepository
 }
 
 func NewRepositories(db *pgxpool.Pool, redis *redis.Client, log logger.Logger) *Repositories {
@@ -28,15 +28,14 @@ func NewRepositories(db *pgxpool.Pool, redis *redis.Client, log logger.Logger) *
 		Audit:         NewAuditRepository(db, log),
 		RateLimit:     NewRateLimitRepository(redis, log),
 	}
-	
+
 	if repos.AnonymousRoom != nil {
 		log.Info("AnonymousRoom repository initialized")
 	} else {
 		log.Warn("AnonymousRoom repository is nil")
 	}
-	
+
 	log.Info("AnonymousChat repository initialized")
-	
+
 	return repos
 }
-

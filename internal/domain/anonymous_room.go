@@ -35,10 +35,10 @@ type AnonymousParticipant struct {
 
 // AnonymousChatMessage is a chat message stored in Redis
 type AnonymousChatMessage struct {
-	ID            string    `json:"id"`            // UUID string
-	RoomID        uuid.UUID `json:"room_id"`       // Room UUID
+	ID            string    `json:"id"`             // UUID string
+	RoomID        uuid.UUID `json:"room_id"`        // Room UUID
 	ParticipantID string    `json:"participant_id"` // Temporary participant ID
-	DisplayName   string    `json:"display_name"`  // Sender display name
+	DisplayName   string    `json:"display_name"`   // Sender display name
 	MessageType   string    `json:"message_type"`   // user, system
 	Content       string    `json:"content"`
 	CreatedAt     time.Time `json:"created_at"`
@@ -52,4 +52,3 @@ const (
 
 // Note: RoomStatusActive, RoomStatusEnded, ParticipantRoleHost, and
 // ParticipantRoleParticipant are defined in room.go and reused here.
-

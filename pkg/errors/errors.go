@@ -49,4 +49,3 @@ func HTTPStatusFromError(err error) int {
 		return http.StatusInternalServerError
 	}
 }
-

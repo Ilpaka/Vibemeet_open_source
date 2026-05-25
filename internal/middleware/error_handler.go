@@ -15,11 +15,10 @@ func ErrorHandler() gin.HandlerFunc {
 
 			// Determine the status code
 			statusCode := errors.HTTPStatusFromError(err.Err)
-			
+
 			c.JSON(statusCode, gin.H{
 				"error": err.Error(),
 			})
 		}
 	}
 }
-

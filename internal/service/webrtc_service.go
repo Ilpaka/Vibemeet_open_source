@@ -71,12 +71,12 @@ func (s *webrtcService) AddTracksToPeerConnection(peerConnection *webrtc.PeerCon
 	// Add video tracks from the screen stream
 	videoTracks := screenStream.GetVideoTracks()
 	s.log.Info("Adding video tracks to peer connection", "count", len(videoTracks))
-	
+
 	if len(videoTracks) == 0 {
 		s.log.Error("No video tracks in screen stream!")
 		return errors.New("no video tracks in screen stream")
 	}
-	
+
 	for i, track := range videoTracks {
 		s.log.Info("Adding video track", "index", i, "track_id", track.ID(), "kind", track.Kind())
 
@@ -88,12 +88,12 @@ func (s *webrtcService) AddTracksToPeerConnection(peerConnection *webrtc.PeerCon
 			s.log.Error("Failed to add video track", "error", err, "track_id", track.ID())
 			return err
 		}
-		
-		s.log.Info("Video track added successfully", 
+
+		s.log.Info("Video track added successfully",
 			"track_id", track.ID(),
 			"transceiver_direction", transceiver.Direction().String(),
 			"transceiver_mid", transceiver.Mid())
-		
+
 		// Confirm the track was actually added
 		if transceiver.Sender() == nil {
 			s.log.Error("Transceiver has no sender after adding track!")
@@ -106,11 +106,11 @@ func (s *webrtcService) AddTracksToPeerConnection(peerConnection *webrtc.PeerCon
 	if audioStream != nil {
 		audioTracks := audioStream.GetAudioTracks()
 		s.log.Info("Adding audio tracks to peer connection", "count", len(audioTracks))
-		
+
 		if len(audioTracks) == 0 {
 			s.log.Warn("Audio stream provided but has no audio tracks!")
 		}
-		
+
 		for i, track := range audioTracks {
 			s.log.Info("Adding audio track", "index", i, "track_id", track.ID(), "kind", track.Kind())
 			transceiver, err := peerConnection.AddTransceiverFromTrack(track, webrtc.RTPTransceiverInit{
@@ -120,11 +120,11 @@ func (s *webrtcService) AddTracksToPeerConnection(peerConnection *webrtc.PeerCon
 				s.log.Error("Failed to add audio track, continuing without audio", "error", err, "track_id", track.ID())
 				// Do not tear down the connection, just continue without audio
 			} else {
-				s.log.Info("Audio track added successfully", 
+				s.log.Info("Audio track added successfully",
 					"track_id", track.ID(),
 					"transceiver_direction", transceiver.Direction().String(),
 					"transceiver_mid", transceiver.Mid())
-				
+
 				// Verify a sender was created
 				if transceiver.Sender() == nil {
 					s.log.Error("Transceiver has no sender after adding audio track!")

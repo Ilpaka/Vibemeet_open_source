@@ -42,7 +42,7 @@ func (s *audioCaptureService) StopCapture() {
 	if s.stream != nil {
 		// Close all tracks in the stream
 		for _, track := range s.stream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 	}
 }

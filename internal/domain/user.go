@@ -7,29 +7,29 @@ import (
 )
 
 type User struct {
-	ID              uuid.UUID `json:"id"`
-	Email           string    `json:"email"`
-	PasswordHash    string    `json:"-"`
-	DisplayName     string    `json:"display_name"`
-	AvatarURL       *string   `json:"avatar_url,omitempty"`
-	GlobalRole      string    `json:"global_role"`
-	IsActive        bool      `json:"is_active"`
-	IsEmailVerified bool      `json:"is_email_verified"`
+	ID              uuid.UUID  `json:"id"`
+	Email           string     `json:"email"`
+	PasswordHash    string     `json:"-"`
+	DisplayName     string     `json:"display_name"`
+	AvatarURL       *string    `json:"avatar_url,omitempty"`
+	GlobalRole      string     `json:"global_role"`
+	IsActive        bool       `json:"is_active"`
+	IsEmailVerified bool       `json:"is_email_verified"`
 	LastLoginAt     *time.Time `json:"last_login_at,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }
 
 type UserSession struct {
-	ID             uuid.UUID  `json:"id"`
-	UserID         uuid.UUID  `json:"user_id"`
-	RefreshTokenHash string    `json:"-"`
-	CreatedAt      time.Time  `json:"created_at"`
-	ExpiresAt      time.Time  `json:"expires_at"`
-	RevokedAt      *time.Time `json:"revoked_at,omitempty"`
-	RevokedReason  *string    `json:"revoked_reason,omitempty"`
-	IPAddress      *string    `json:"ip_address,omitempty"`
-	UserAgent      *string    `json:"user_agent,omitempty"`
+	ID               uuid.UUID  `json:"id"`
+	UserID           uuid.UUID  `json:"user_id"`
+	RefreshTokenHash string     `json:"-"`
+	CreatedAt        time.Time  `json:"created_at"`
+	ExpiresAt        time.Time  `json:"expires_at"`
+	RevokedAt        *time.Time `json:"revoked_at,omitempty"`
+	RevokedReason    *string    `json:"revoked_reason,omitempty"`
+	IPAddress        *string    `json:"ip_address,omitempty"`
+	UserAgent        *string    `json:"user_agent,omitempty"`
 }
 
 type UserSettings struct {
@@ -47,18 +47,18 @@ type UserSettings struct {
 }
 
 type UserVideoProfile struct {
-	ID                   uuid.UUID `json:"id"`
-	UserID               uuid.UUID `json:"user_id"`
-	Name                 string    `json:"name"`
-	BackgroundType       string    `json:"background_type"`
-	BackgroundImageURL   *string   `json:"background_image_url,omitempty"`
+	ID                    uuid.UUID `json:"id"`
+	UserID                uuid.UUID `json:"user_id"`
+	Name                  string    `json:"name"`
+	BackgroundType        string    `json:"background_type"`
+	BackgroundImageURL    *string   `json:"background_image_url,omitempty"`
 	NoiseSuppressionLevel string    `json:"noise_suppression_level"`
-	IsDefault            bool      `json:"is_default"`
-	CreatedAt            time.Time `json:"created_at"`
+	IsDefault             bool      `json:"is_default"`
+	CreatedAt             time.Time `json:"created_at"`
 }
 
 const (
-	GlobalRoleUser          = "user"
+	GlobalRoleUser           = "user"
 	GlobalRoleTechnicalAdmin = "technical_admin"
 )
 
@@ -77,9 +77,9 @@ const (
 )
 
 const (
-	BackgroundTypeNone   = "none"
-	BackgroundTypeBlur   = "blur"
-	BackgroundTypeImage  = "image"
+	BackgroundTypeNone  = "none"
+	BackgroundTypeBlur  = "blur"
+	BackgroundTypeImage = "image"
 )
 
 const (
@@ -88,4 +88,3 @@ const (
 	NoiseSuppressionMedium = "medium"
 	NoiseSuppressionHigh   = "high"
 )
-

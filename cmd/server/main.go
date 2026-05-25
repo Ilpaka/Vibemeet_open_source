@@ -49,7 +49,7 @@ func main() {
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		appLogger.Fatal("Failed to connect to Redis", "error", err)

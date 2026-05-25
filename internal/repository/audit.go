@@ -27,17 +27,16 @@ func (r *auditRepository) CreateLog(ctx context.Context, auditLog *domain.AuditL
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
-	
+
 	err := r.db.QueryRow(ctx, query,
 		auditLog.EventTime, auditLog.ActorUserID, auditLog.ActorRole,
 		auditLog.RoomID, auditLog.EventType, auditLog.Payload,
 	).Scan(&auditLog.ID)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create audit log", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
-

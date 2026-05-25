@@ -34,18 +34,18 @@ func (r *statsRepository) CreateParticipantStats(ctx context.Context, stats *dom
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at
 	`
-	
+
 	err := r.db.QueryRow(ctx, query,
 		stats.RoomParticipantID, stats.AvgRTTMs, stats.MaxRTTMs, stats.AvgJitterMs,
 		stats.PacketLossUpPercent, stats.PacketLossDownPercent, stats.AvgBitrateKbps,
 		stats.NetworkScore, stats.CreatedAt,
 	).Scan(&stats.ID, &stats.CreatedAt)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create participant stats", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -56,14 +56,14 @@ func (r *statsRepository) GetParticipantStats(ctx context.Context, participantID
 		FROM participant_stats
 		WHERE room_participant_id = $1
 	`
-	
+
 	stats := &domain.ParticipantStats{}
 	err := r.db.QueryRow(ctx, query, participantID).Scan(
 		&stats.ID, &stats.RoomParticipantID, &stats.AvgRTTMs, &stats.MaxRTTMs, &stats.AvgJitterMs,
 		&stats.PacketLossUpPercent, &stats.PacketLossDownPercent, &stats.AvgBitrateKbps,
 		&stats.NetworkScore, &stats.CreatedAt,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("stats not found")
@@ -71,7 +71,7 @@ func (r *statsRepository) GetParticipantStats(ctx context.Context, participantID
 		r.log.Error("Failed to get participant stats", "error", err)
 		return nil, err
 	}
-	
+
 	return stats, nil
 }
 
@@ -84,14 +84,14 @@ func (r *statsRepository) GetRoomStats(ctx context.Context, roomID uuid.UUID) ([
 		WHERE rp.room_id = $1
 		ORDER BY ps.created_at DESC
 	`
-	
+
 	rows, err := r.db.Query(ctx, query, roomID)
 	if err != nil {
 		r.log.Error("Failed to get room stats", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var stats []*domain.ParticipantStats
 	for rows.Next() {
 		s := &domain.ParticipantStats{}
@@ -106,7 +106,6 @@ func (r *statsRepository) GetRoomStats(ctx context.Context, roomID uuid.UUID) ([
 		}
 		stats = append(stats, s)
 	}
-	
+
 	return stats, nil
 }
-

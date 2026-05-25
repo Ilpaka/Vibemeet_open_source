@@ -50,18 +50,18 @@ func (r *roomRepository) Create(ctx context.Context, room *domain.Room) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING created_at, updated_at
 	`
-	
+
 	err := r.db.QueryRow(ctx, query,
 		room.ID, room.LiveKitRoomName, room.HostUserID, room.Title, room.Description, room.Status,
 		room.ScheduledStartAt, room.ScheduledEndAt, room.MaxParticipants, room.WaitingRoomEnabled,
 		room.IsLocked, room.PasswordHash, room.Settings, room.CreatedAt, room.UpdatedAt,
 	).Scan(&room.CreatedAt, &room.UpdatedAt)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create room", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -74,7 +74,7 @@ func (r *roomRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Roo
 		FROM rooms
 		WHERE id = $1
 	`
-	
+
 	room := &domain.Room{}
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&room.ID, &room.LiveKitRoomName, &room.HostUserID, &room.Title, &room.Description, &room.Status,
@@ -82,7 +82,7 @@ func (r *roomRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Roo
 		&room.MaxParticipants, &room.WaitingRoomEnabled, &room.IsLocked, &room.PasswordHash, &room.Settings,
 		&room.CreatedAt, &room.UpdatedAt,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("room not found")
@@ -90,7 +90,7 @@ func (r *roomRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Roo
 		r.log.Error("Failed to get room by ID", "error", err)
 		return nil, err
 	}
-	
+
 	return room, nil
 }
 
@@ -103,7 +103,7 @@ func (r *roomRepository) GetByLiveKitRoomName(ctx context.Context, name string) 
 		FROM rooms
 		WHERE livekit_room_name = $1
 	`
-	
+
 	room := &domain.Room{}
 	err := r.db.QueryRow(ctx, query, name).Scan(
 		&room.ID, &room.LiveKitRoomName, &room.HostUserID, &room.Title, &room.Description, &room.Status,
@@ -111,7 +111,7 @@ func (r *roomRepository) GetByLiveKitRoomName(ctx context.Context, name string) 
 		&room.MaxParticipants, &room.WaitingRoomEnabled, &room.IsLocked, &room.PasswordHash, &room.Settings,
 		&room.CreatedAt, &room.UpdatedAt,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("room not found")
@@ -119,7 +119,7 @@ func (r *roomRepository) GetByLiveKitRoomName(ctx context.Context, name string) 
 		r.log.Error("Failed to get room by LiveKit name", "error", err)
 		return nil, err
 	}
-	
+
 	return room, nil
 }
 
@@ -134,14 +134,14 @@ func (r *roomRepository) List(ctx context.Context, userID uuid.UUID, limit, offs
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`
-	
+
 	rows, err := r.db.Query(ctx, query, userID, limit, offset)
 	if err != nil {
 		r.log.Error("Failed to list rooms", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var rooms []*domain.Room
 	for rows.Next() {
 		room := &domain.Room{}
@@ -157,7 +157,7 @@ func (r *roomRepository) List(ctx context.Context, userID uuid.UUID, limit, offs
 		}
 		rooms = append(rooms, room)
 	}
-	
+
 	return rooms, nil
 }
 
@@ -171,19 +171,19 @@ func (r *roomRepository) Update(ctx context.Context, room *domain.Room) error {
 		WHERE id = $1
 		RETURNING updated_at
 	`
-	
+
 	err := r.db.QueryRow(ctx, query,
 		room.ID, room.Title, room.Description, room.Status,
 		room.ScheduledStartAt, room.ScheduledEndAt, room.ActualStartAt, room.ActualEndAt,
 		room.MaxParticipants, room.WaitingRoomEnabled, room.IsLocked,
 		room.PasswordHash, room.Settings, time.Now(),
 	).Scan(&room.UpdatedAt)
-	
+
 	if err != nil {
 		r.log.Error("Failed to update room", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -202,17 +202,17 @@ func (r *roomRepository) CreateInvite(ctx context.Context, invite *domain.RoomIn
 		INSERT INTO room_invites (id, room_id, created_by_user_id, link_token, label, expires_at, max_uses, used_count, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
-	
+
 	_, err := r.db.Exec(ctx, query,
 		invite.ID, invite.RoomID, invite.CreatedByUserID, invite.LinkToken,
 		invite.Label, invite.ExpiresAt, invite.MaxUses, invite.UsedCount, invite.CreatedAt,
 	)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create invite", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -222,13 +222,13 @@ func (r *roomRepository) GetInviteByToken(ctx context.Context, token string) (*d
 		FROM room_invites
 		WHERE link_token = $1
 	`
-	
+
 	invite := &domain.RoomInvite{}
 	err := r.db.QueryRow(ctx, query, token).Scan(
 		&invite.ID, &invite.RoomID, &invite.CreatedByUserID, &invite.LinkToken,
 		&invite.Label, &invite.ExpiresAt, &invite.MaxUses, &invite.UsedCount, &invite.CreatedAt,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("invite not found")
@@ -236,7 +236,7 @@ func (r *roomRepository) GetInviteByToken(ctx context.Context, token string) (*d
 		r.log.Error("Failed to get invite", "error", err)
 		return nil, err
 	}
-	
+
 	return invite, nil
 }
 
@@ -256,18 +256,18 @@ func (r *roomRepository) CreateParticipant(ctx context.Context, participant *dom
 		                              joined_at, initial_muted, client_ip, user_agent)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
-	
+
 	_, err := r.db.Exec(ctx, query,
 		participant.ID, participant.RoomID, participant.UserID, participant.Role,
 		participant.DisplayName, participant.LiveKitSID, participant.JoinedAt,
 		participant.InitialMuted, participant.ClientIP, participant.UserAgent,
 	)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create participant", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -280,7 +280,7 @@ func (r *roomRepository) GetParticipant(ctx context.Context, roomID, userID uuid
 		ORDER BY joined_at DESC
 		LIMIT 1
 	`
-	
+
 	participant := &domain.RoomParticipant{}
 	var leftAt sql.NullTime
 	err := r.db.QueryRow(ctx, query, roomID, userID).Scan(
@@ -289,7 +289,7 @@ func (r *roomRepository) GetParticipant(ctx context.Context, roomID, userID uuid
 		&participant.LeaveReason, &participant.IsKicked, &participant.InitialMuted,
 		&participant.ClientIP, &participant.UserAgent,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("participant not found")
@@ -297,11 +297,11 @@ func (r *roomRepository) GetParticipant(ctx context.Context, roomID, userID uuid
 		r.log.Error("Failed to get participant", "error", err)
 		return nil, err
 	}
-	
+
 	if leftAt.Valid {
 		participant.LeftAt = &leftAt.Time
 	}
-	
+
 	return participant, nil
 }
 
@@ -312,7 +312,7 @@ func (r *roomRepository) GetParticipantByID(ctx context.Context, participantID u
 		FROM room_participants
 		WHERE id = $1
 	`
-	
+
 	participant := &domain.RoomParticipant{}
 	var leftAt sql.NullTime
 	err := r.db.QueryRow(ctx, query, participantID).Scan(
@@ -321,7 +321,7 @@ func (r *roomRepository) GetParticipantByID(ctx context.Context, participantID u
 		&participant.LeaveReason, &participant.IsKicked, &participant.InitialMuted,
 		&participant.ClientIP, &participant.UserAgent,
 	)
-	
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("participant not found")
@@ -329,11 +329,11 @@ func (r *roomRepository) GetParticipantByID(ctx context.Context, participantID u
 		r.log.Error("Failed to get participant by ID", "error", err)
 		return nil, err
 	}
-	
+
 	if leftAt.Valid {
 		participant.LeftAt = &leftAt.Time
 	}
-	
+
 	return participant, nil
 }
 
@@ -345,14 +345,14 @@ func (r *roomRepository) GetParticipantsByRoom(ctx context.Context, roomID uuid.
 		WHERE room_id = $1 AND left_at IS NULL
 		ORDER BY joined_at ASC
 	`
-	
+
 	rows, err := r.db.Query(ctx, query, roomID)
 	if err != nil {
 		r.log.Error("Failed to get participants", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var participants []*domain.RoomParticipant
 	for rows.Next() {
 		participant := &domain.RoomParticipant{}
@@ -372,7 +372,7 @@ func (r *roomRepository) GetParticipantsByRoom(ctx context.Context, roomID uuid.
 		}
 		participants = append(participants, participant)
 	}
-	
+
 	return participants, nil
 }
 
@@ -382,17 +382,17 @@ func (r *roomRepository) UpdateParticipant(ctx context.Context, participant *dom
 		SET left_at = $3, leave_reason = $4, is_kicked = $5
 		WHERE id = $1 AND room_id = $2
 	`
-	
+
 	_, err := r.db.Exec(ctx, query,
 		participant.ID, participant.RoomID, participant.LeftAt,
 		participant.LeaveReason, participant.IsKicked,
 	)
-	
+
 	if err != nil {
 		r.log.Error("Failed to update participant", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -401,16 +401,16 @@ func (r *roomRepository) CreateWaitingRoomEntry(ctx context.Context, entry *doma
 		INSERT INTO waiting_room_entries (id, room_id, user_id, display_name, status, requested_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	
+
 	_, err := r.db.Exec(ctx, query,
 		entry.ID, entry.RoomID, entry.UserID, entry.DisplayName, entry.Status, entry.RequestedAt,
 	)
-	
+
 	if err != nil {
 		r.log.Error("Failed to create waiting room entry", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -421,14 +421,14 @@ func (r *roomRepository) GetWaitingRoomEntries(ctx context.Context, roomID uuid.
 		WHERE room_id = $1 AND status = $2
 		ORDER BY requested_at ASC
 	`
-	
+
 	rows, err := r.db.Query(ctx, query, roomID, status)
 	if err != nil {
 		r.log.Error("Failed to get waiting room entries", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var entries []*domain.WaitingRoomEntry
 	for rows.Next() {
 		entry := &domain.WaitingRoomEntry{}
@@ -446,7 +446,7 @@ func (r *roomRepository) GetWaitingRoomEntries(ctx context.Context, roomID uuid.
 		}
 		entries = append(entries, entry)
 	}
-	
+
 	return entries, nil
 }
 
@@ -456,16 +456,15 @@ func (r *roomRepository) UpdateWaitingRoomEntry(ctx context.Context, entry *doma
 		SET status = $2, decided_at = $3, decided_by_user_id = $4, reason = $5
 		WHERE id = $1
 	`
-	
+
 	_, err := r.db.Exec(ctx, query,
 		entry.ID, entry.Status, entry.DecidedAt, entry.DecidedByUserID, entry.Reason,
 	)
-	
+
 	if err != nil {
 		r.log.Error("Failed to update waiting room entry", "error", err)
 		return err
 	}
-	
+
 	return nil
 }
-

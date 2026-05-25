@@ -62,4 +62,3 @@ func (l *logger) Fatal(msg string, args ...interface{}) {
 	l.Logger.Error(msg, args...)
 	os.Exit(1)
 }
-

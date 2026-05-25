@@ -17,22 +17,21 @@ type AuditLog struct {
 }
 
 const (
-	ActorRoleUser          = "user"
-	ActorRoleHost          = "host"
+	ActorRoleUser           = "user"
+	ActorRoleHost           = "host"
 	ActorRoleTechnicalAdmin = "technical_admin"
-	ActorRoleSystem        = "system"
+	ActorRoleSystem         = "system"
 )
 
 const (
-	EventTypeRoomCreated     = "ROOM_CREATED"
-	EventTypeRoomUpdated     = "ROOM_UPDATED"
-	EventTypeRoomDeleted     = "ROOM_DELETED"
-	EventTypeRoomJoined      = "ROOM_JOINED"
-	EventTypeRoomLeft        = "ROOM_LEFT"
-	EventTypeUserKicked      = "USER_KICKED"
-	EventTypeRoomLocked      = "ROOM_LOCKED"
-	EventTypeRoomUnlocked    = "ROOM_UNLOCKED"
+	EventTypeRoomCreated         = "ROOM_CREATED"
+	EventTypeRoomUpdated         = "ROOM_UPDATED"
+	EventTypeRoomDeleted         = "ROOM_DELETED"
+	EventTypeRoomJoined          = "ROOM_JOINED"
+	EventTypeRoomLeft            = "ROOM_LEFT"
+	EventTypeUserKicked          = "USER_KICKED"
+	EventTypeRoomLocked          = "ROOM_LOCKED"
+	EventTypeRoomUnlocked        = "ROOM_UNLOCKED"
 	EventTypeWaitingRoomApproved = "WAITING_ROOM_APPROVED"
 	EventTypeWaitingRoomRejected = "WAITING_ROOM_REJECTED"
 )
-

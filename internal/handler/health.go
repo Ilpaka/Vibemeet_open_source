@@ -41,10 +41,9 @@ func (h *HealthHandler) Check(c *gin.Context) {
 // ServerInfo returns server information for clients.
 func (h *HealthHandler) ServerInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"host_ip":       h.hostIP,
-		"livekit_port":  h.liveKitPort,
-		"livekit_url":   "ws://" + h.hostIP + ":" + h.liveKitPort,
-		"api_base":      "/api/v1",
+		"host_ip":      h.hostIP,
+		"livekit_port": h.liveKitPort,
+		"livekit_url":  "ws://" + h.hostIP + ":" + h.liveKitPort,
+		"api_base":     "/api/v1",
 	})
 }
-

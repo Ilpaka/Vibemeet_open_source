@@ -61,4 +61,3 @@ func (h *AnonymousMediaHandler) GetToken(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": token, "url": url})
 }
-
