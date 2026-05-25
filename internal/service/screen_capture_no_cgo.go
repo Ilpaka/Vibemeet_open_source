@@ -43,7 +43,7 @@ func (s *screenCaptureService) StopCapture() {
 	}
 	if s.stream != nil {
 		for _, track := range s.stream.GetTracks() {
-			track.Close()
+			_ = track.Close()
 		}
 	}
 }
