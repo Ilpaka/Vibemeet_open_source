@@ -1,5 +1,12 @@
 # Vibemeet
 
+[![CI](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/ci.yml)
+[![lint](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml)
+[![compose](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml)
+[![Go](https://img.shields.io/badge/go-1.21-00ADD8?logo=go&logoColor=white)](go.mod)
+[![LiveKit](https://img.shields.io/badge/livekit-SFU-FF4D4D)](https://livekit.io)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Self-hostable video conferencing built on Go and LiveKit. Drop in your own
 infrastructure, get a Zoom-style web client with rooms, chat, and screen
 sharing — no third-party meeting service in the loop.
@@ -171,10 +178,13 @@ A complete endpoint reference lives in `docs/API.md`. Highlights:
 
 ## Documentation
 
-- `docs/ARCHITECTURE.md` — request flow, anonymous vs authenticated paths,
-  data model, LiveKit integration.
-- `docs/API.md` — REST API reference.
-- `docs/DEPLOYMENT.md` — production deployment, TLS, firewall rules.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — request flow, anonymous
+  vs authenticated paths, data model, LiveKit integration.
+- [docs/API.md](docs/API.md) — REST API reference.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — production deployment, TLS,
+  firewall rules.
+- [docs/SPEC.ru.md](docs/SPEC.ru.md) — техническая спецификация (RU):
+  цели и нецели, NFR, модель угроз, компромиссы, дорожная карта.
 
 ## License
 

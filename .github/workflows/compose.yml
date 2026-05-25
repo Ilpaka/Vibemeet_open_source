@@ -1,0 +1,51 @@
+name: compose
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker-compose*.yml"
+      - "Dockerfile"
+      - "nginx*.conf"
+      - "livekit*.yaml"
+      - "env.sample"
+      - "env.prod.example"
+      - ".github/workflows/compose.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker-compose*.yml"
+      - "Dockerfile"
+      - "nginx*.conf"
+      - "livekit*.yaml"
+      - "env.sample"
+      - "env.prod.example"
+      - ".github/workflows/compose.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compose-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: docker compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate dev stack
+        run: docker compose --env-file env.sample config -q
+
+      - name: Validate prod stack
+        env:
+          HOST_IP: 127.0.0.1
+          LIVEKIT_FRONTEND_URL: ws://127.0.0.1:17880
+          POSTGRES_PASSWORD: ci-dummy-password
+          JWT_ACCESS_SECRET: ci-dummy-access-secret
+          JWT_REFRESH_SECRET: ci-dummy-refresh-secret
+          LIVEKIT_API_KEY: ci-dummy-api-key
+          LIVEKIT_API_SECRET: ci-dummy-api-secret
+        run: docker compose -f docker-compose.prod.yml config -q
