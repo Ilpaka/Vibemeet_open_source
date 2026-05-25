@@ -7,6 +7,9 @@
 [![LiveKit](https://img.shields.io/badge/livekit-SFU-FF4D4D)](https://livekit.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+> **Техническая спецификация на русском →** [`docs/SPEC.ru.md`](docs/SPEC.ru.md)
+> &nbsp;·&nbsp; English docs: [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Deployment](docs/DEPLOYMENT.md)
+
 Self-hostable video conferencing built on Go and LiveKit. Drop in your own
 infrastructure, get a Zoom-style web client with rooms, chat, and screen
 sharing — no third-party meeting service in the loop.
