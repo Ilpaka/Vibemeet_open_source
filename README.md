@@ -3,6 +3,7 @@
 [![CI](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/ci.yml)
 [![lint](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml)
 [![compose](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml)
+[![migrate](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/migrate.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/migrate.yml)
 [![Go](https://img.shields.io/badge/go-1.21-00ADD8?logo=go&logoColor=white)](go.mod)
 [![LiveKit](https://img.shields.io/badge/livekit-SFU-FF4D4D)](https://livekit.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,7 +13,7 @@
 
 Self-hostable video conferencing built on Go and LiveKit. Drop in your own
 infrastructure, get a Zoom-style web client with rooms, chat, and screen
-sharing — no third-party meeting service in the loop.
+sharing - no third-party meeting service in the loop.
 
 The default flow is anonymous: anyone with a room link can join from the
 browser without an account. Optional authentication unlocks room ownership,
@@ -33,11 +34,11 @@ invites, and per-user settings.
 ## Features
 
 - WebRTC video and audio for any number of participants per room.
-- Screen sharing — both browser-native (LiveKit track) and server-side
+- Screen sharing - both browser-native (LiveKit track) and server-side
   capture via Pion WebRTC.
 - Persistent text chat for authenticated rooms; ephemeral Redis-backed chat
   (6-hour TTL) for anonymous rooms.
-- Anonymous rooms with cookie-based participant identity — no signup
+- Anonymous rooms with cookie-based participant identity - no signup
   required to host or join.
 - JWT auth (access + refresh, refresh tokens hashed and stored in Postgres
   so they can be revoked).
@@ -73,7 +74,7 @@ cp env.sample .env
 
 Open <http://localhost> and create a room. To join from another device on
 the same LAN, set `HOST_IP` in `.env` to the host machine's LAN address
-(for example `192.168.1.42`) before starting — LiveKit needs that IP to
+(for example `192.168.1.42`) before starting - LiveKit needs that IP to
 advertise correct ICE candidates.
 
 Stop the stack with `docker compose --env-file .env down`.
@@ -102,25 +103,48 @@ and timeouts. See `internal/config/config.go`.
 ## Project layout
 
 ```
-cmd/server/             Process entrypoint, router wiring
+cmd/server/             Process entrypoint, subcommands, router wiring
 internal/
   config/               Env loading and validation
   domain/               Core types (users, rooms, chat, stats)
   handler/              HTTP handlers (Gin)
   middleware/           Auth, CORS, rate limiting, request logging
+  migration/            Goose migrations (embedded into the binary)
   repository/           Postgres + Redis persistence
   service/              Business logic (auth, rooms, LiveKit, screen share)
 pkg/
   jwt/                  Token signing and validation
   logger/               slog wrapper
 web/                    Static frontend (HTML/CSS/JS)
-docs/                   Architecture, API reference, deployment guide
+docs/                   Architecture, API reference, deployment guide, spec
 docker-compose.yml      Local development stack
 docker-compose.prod.yml Production stack
-init_db.sql             Database schema (idempotent)
 livekit{.prod}.yaml     LiveKit server config
 nginx{.prod}.conf       Reverse proxy config
 ```
+
+## Database migrations
+
+Schema is managed with [goose](https://github.com/pressly/goose) and embedded
+into the server binary. On startup the server applies every pending
+migration before opening the HTTP listener (set `MIGRATE_ON_BOOT=false` to
+opt out and run them as a separate CI/CD step).
+
+```bash
+make migrate-up        # apply all pending migrations
+make migrate-status    # show applied/pending state
+make migrate-version   # print the current schema version
+make migrate-down      # roll back the most recent migration
+make migrate-redo      # roll back and re-apply the latest migration
+```
+
+These targets delegate to the same `vibemeet migrate <cmd>` subcommand the
+binary exposes, so the production image can run them without a separate
+goose CLI.
+
+Migration files live in [internal/migration/](internal/migration/). New
+migrations are sequential SQL files (`00002_*.sql`, `00003_*.sql`, ...) with
+goose `-- +goose Up` / `-- +goose Down` markers.
 
 ## Local development without Docker
 
@@ -129,17 +153,16 @@ instances if you'd rather skip the full Compose stack.
 
 ```bash
 # 1. Have Postgres, Redis, and LiveKit running locally.
-# 2. Apply the schema.
-psql "$DATABASE_URL" -f init_db.sql
-# 3. Export config and run.
+# 2. Export config (DATABASE_DSN, REDIS_ADDR, JWT secrets, ...).
 export $(grep -v '^#' .env | xargs)
+# 3. Run. Migrations are applied automatically on first start.
 make run
 # or:  go run ./cmd/server
 ```
 
 The server listens on `SERVER_PORT` (8080 by default). The static frontend
 in `web/` expects to be served by Nginx in front of the API, but you can
-also open the HTML files directly during development — they'll talk to the
+also open the HTML files directly during development - they'll talk to the
 API via CORS.
 
 Useful Make targets:
@@ -172,21 +195,21 @@ own reverse proxy.
 
 A complete endpoint reference lives in `docs/API.md`. Highlights:
 
-- `POST /api/v1/auth/{register,login,refresh}` — user accounts.
-- `POST /api/v1/rooms` — create an anonymous room (no auth).
-- `POST /api/v1/rooms/:id/join`, `/leave`, `/media/token` — anonymous flow.
-- `GET/POST /api/v1/rooms/:id/chat/messages` — anonymous chat.
-- `GET /api/v1/users/me`, `/settings` — authenticated user features.
-- `GET /server-info` — frontend discovery for `HOST_IP` and LiveKit URL.
+- `POST /api/v1/auth/{register,login,refresh}` - user accounts.
+- `POST /api/v1/rooms` - create an anonymous room (no auth).
+- `POST /api/v1/rooms/:id/join`, `/leave`, `/media/token` - anonymous flow.
+- `GET/POST /api/v1/rooms/:id/chat/messages` - anonymous chat.
+- `GET /api/v1/users/me`, `/settings` - authenticated user features.
+- `GET /server-info` - frontend discovery for `HOST_IP` and LiveKit URL.
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — request flow, anonymous
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - request flow, anonymous
   vs authenticated paths, data model, LiveKit integration.
-- [docs/API.md](docs/API.md) — REST API reference.
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — production deployment, TLS,
+- [docs/API.md](docs/API.md) - REST API reference.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - production deployment, TLS,
   firewall rules.
-- [docs/SPEC.ru.md](docs/SPEC.ru.md) — техническая спецификация (RU):
+- [docs/SPEC.ru.md](docs/SPEC.ru.md) - техническая спецификация (RU):
   цели и нецели, NFR, модель угроз, компромиссы, дорожная карта.
 
 ## License

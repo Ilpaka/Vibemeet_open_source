@@ -38,6 +38,10 @@ type DatabaseConfig struct {
 	MaxConnections  int
 	MaxIdleTime     time.Duration
 	ConnMaxLifetime time.Duration
+	// MigrateOnBoot applies pending goose migrations before the HTTP server
+	// starts. Defaults to true. Set MIGRATE_ON_BOOT=false to disable when a
+	// CI/CD pipeline runs `vibemeet migrate up` as a separate step.
+	MigrateOnBoot bool
 }
 
 type RedisConfig struct {
@@ -85,6 +89,7 @@ func Load() (*Config, error) {
 			MaxConnections:  getEnvAsInt("DATABASE_MAX_CONNECTIONS", 25),
 			MaxIdleTime:     getEnvAsDuration("DATABASE_MAX_IDLE_TIME", 5*time.Minute),
 			ConnMaxLifetime: getEnvAsDuration("DATABASE_CONN_MAX_LIFETIME", 1*time.Hour),
+			MigrateOnBoot:   getEnvAsBool("MIGRATE_ON_BOOT", true),
 		},
 		Redis: RedisConfig{
 			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
@@ -151,9 +156,17 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	return defaultValue
 }
 
+func getEnvAsBool(key string, defaultValue bool) bool {
+	valueStr := getEnv(key, "")
+	if value, err := strconv.ParseBool(valueStr); err == nil {
+		return value
+	}
+	return defaultValue
+}
+
 // GetLocalIP returns the first non-loopback IPv4 address of the host, preferring
 // private LAN ranges (192.168.*, 10.*, 172.*). Used as a fallback when HOST_IP
-// is not set in the environment — convenient for LAN-only development.
+// is not set in the environment - convenient for LAN-only development.
 func GetLocalIP() string {
 	if ip := os.Getenv("HOST_IP"); ip != "" {
 		return ip

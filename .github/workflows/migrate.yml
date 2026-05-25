@@ -1,0 +1,77 @@
+name: migrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "internal/migration/**"
+      - "cmd/server/main.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/migrate.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "internal/migration/**"
+      - "cmd/server/main.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/migrate.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reversible:
+    name: up -> down -> up
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+      DATABASE_DSN: postgres://vibemeet:testpass@localhost:5432/vibemeet?sslmode=disable
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: vibemeet
+          POSTGRES_USER: vibemeet
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vibemeet -d vibemeet"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build -o vibemeet ./cmd/server
+
+      - name: Initial status
+        run: ./vibemeet migrate status
+
+      - name: Apply migrations
+        run: ./vibemeet migrate up
+
+      - name: Schema version
+        run: ./vibemeet migrate version
+
+      - name: Roll back the latest migration
+        run: ./vibemeet migrate down
+
+      - name: Re-apply migrations
+        run: ./vibemeet migrate up
+
+      - name: Final status
+        run: ./vibemeet migrate status

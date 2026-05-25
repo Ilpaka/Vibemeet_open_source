@@ -10,7 +10,7 @@ you need more.
 - A Linux host with a public IP (or a private IP if you'll be behind
   another reverse proxy).
 - Docker 24+ and the Docker Compose plugin (`docker compose version`).
-- Open inbound ports — see the firewall section below.
+- Open inbound ports - see the firewall section below.
 - TLS certificates if you intend to serve over HTTPS (you should).
 
 ## 1. Configure
@@ -120,7 +120,7 @@ firewall-cmd --reload
 ```
 
 If you run a cloud VM, mirror the same rules in the provider's security
-groups. UDP for media is non-negotiable — TCP fallback exists but is
+groups. UDP for media is non-negotiable - TCP fallback exists but is
 substantially worse for real-time video.
 
 ## Operations
@@ -144,10 +144,27 @@ git pull
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 
-The schema is applied via `init_db.sql` on first start. The file is
-idempotent (every object is `IF NOT EXISTS`), but if you add columns to
-existing tables you'll need a proper migration — `init_db.sql` is not
-re-run against an existing database.
+### Database migrations
+
+Schema is managed with [goose](https://github.com/pressly/goose) and embedded
+into the server binary. By default migrations are applied automatically on
+startup; new pending migrations apply before the HTTP listener starts.
+
+To manage migrations out-of-band (recommended for CI/CD pipelines), set
+`MIGRATE_ON_BOOT=false` in `.env.prod` and run them explicitly:
+
+```bash
+# Inside the running container or with DATABASE_DSN exported:
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec vibemeet ./server migrate status
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec vibemeet ./server migrate up
+```
+
+Available subcommands: `up`, `up-by-one`, `down`, `redo`, `status`, `version`.
+
+To roll a release back, deploy the previous image and run
+`./server migrate down` to revert the most recent migration.
 
 ## Backups
 
@@ -168,13 +185,15 @@ backup needed.
 **Browser shows "connecting to room" forever.** Almost always a LiveKit
 reachability issue. Confirm:
 
-- The browser can reach `LIVEKIT_FRONTEND_URL` (try opening it directly —
+- The browser can reach `LIVEKIT_FRONTEND_URL` (try opening it directly -
   you should see "OK").
 - UDP ports 17882 and 50000–50050 are open.
 - `HOST_IP` matches the address the browser uses to reach the server.
 
-**`docker compose up` fails on `init_db.sql`.** A previous deploy left
-incompatible data in the volume. Either run a migration or
+**`vibemeet` container exits with "Database migrations failed".** The
+volume has data that conflicts with a pending migration. Use
+`./server migrate status` to inspect which migration is stuck, fix the
+underlying conflict (often a manual schema change), or run
 `docker compose down -v` (destructive) and start fresh.
 
 **Backend logs "JWT secrets must be set".** Your `.env.prod` is empty or

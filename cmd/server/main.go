@@ -1,10 +1,12 @@
-// Vibemeet — a self-hostable, WebRTC-based video conferencing server.
-// This is the process entrypoint: it wires configuration, dependencies,
-// the HTTP router, and graceful shutdown.
+// Vibemeet - a self-hostable, WebRTC-based video conferencing server.
+// This is the process entrypoint: it parses subcommands, wires configuration
+// and dependencies, applies pending database migrations, and runs the HTTP
+// router with graceful shutdown.
 package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,16 +18,48 @@ import (
 	"vibemeet/internal/config"
 	"vibemeet/internal/handler"
 	"vibemeet/internal/middleware"
+	"vibemeet/internal/migration"
 	"vibemeet/internal/repository"
 	"vibemeet/internal/service"
 	"vibemeet/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "migrate":
+			runMigrate(os.Args[2:])
+			return
+		case "-h", "--help", "help":
+			printUsage()
+			return
+		}
+	}
+	runServer()
+}
+
+func printUsage() {
+	fmt.Fprintf(os.Stderr, `Vibemeet server.
+
+Usage:
+  vibemeet                       run the HTTP server (default)
+  vibemeet migrate up            apply all pending migrations
+  vibemeet migrate up-by-one     apply the next migration
+  vibemeet migrate down          roll back the most recent migration
+  vibemeet migrate redo          roll back and re-apply the latest migration
+  vibemeet migrate status        show applied/pending state of every migration
+  vibemeet migrate version       print the current schema version
+
+Configuration is read from the environment; see env.sample for the full list.
+`)
+}
+
+func runServer() {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
@@ -43,6 +77,13 @@ func main() {
 		appLogger.Fatal("Failed to ping database", "error", err)
 	}
 	appLogger.Info("Database connection established")
+
+	if cfg.Database.MigrateOnBoot {
+		if err := applyMigrations(dbPool); err != nil {
+			appLogger.Fatal("Database migrations failed", "error", err)
+		}
+		appLogger.Info("Database migrations up to date")
+	}
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr,
@@ -95,6 +136,66 @@ func main() {
 	}
 
 	appLogger.Info("Server exited")
+}
+
+// applyMigrations runs every pending goose migration against the pool.
+func applyMigrations(pool *pgxpool.Pool) error {
+	db := stdlib.OpenDBFromPool(pool)
+	defer func() { _ = db.Close() }()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	return migration.Apply(ctx, db)
+}
+
+func runMigrate(args []string) {
+	if len(args) == 0 {
+		fmt.Fprintln(os.Stderr, "usage: vibemeet migrate <up|up-by-one|down|redo|status|version>")
+		os.Exit(2)
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	db, err := sql.Open("pgx", cfg.Database.DSN)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	cmd := args[0]
+	switch cmd {
+	case "up":
+		err = migration.Apply(ctx, db)
+	case "up-by-one":
+		err = migration.ApplyOne(ctx, db)
+	case "down":
+		err = migration.Down(ctx, db)
+	case "redo":
+		err = migration.Redo(ctx, db)
+	case "status":
+		err = migration.Status(ctx, db)
+	case "version":
+		v, vErr := migration.Version(ctx, db)
+		if vErr != nil {
+			log.Fatalf("migrate version: %v", vErr)
+		}
+		fmt.Printf("schema version: %d\n", v)
+		return
+	default:
+		fmt.Fprintf(os.Stderr, "unknown migrate command: %s\n", cmd)
+		os.Exit(2)
+	}
+
+	if err != nil {
+		log.Fatalf("migrate %s: %v", cmd, err)
+	}
 }
 
 func setupRouter(

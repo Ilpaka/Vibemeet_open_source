@@ -37,7 +37,7 @@ runs as a separate service; the browser talks to it directly over
 WebSockets for signaling and over UDP for media.
 
 The Go backend is the only component that touches the database. LiveKit
-holds no persistent state — it's a media router (SFU) only.
+holds no persistent state - it's a media router (SFU) only.
 
 ## Two parallel flows: anonymous vs authenticated
 
@@ -58,10 +58,10 @@ Authentication is layered on top for the things that actually need it:
 | Join room                   | ✓         | ✓             |
 | Send/receive chat in a room | ✓         | ✓             |
 | Get a LiveKit token         | ✓         | ✓             |
-| List my rooms               | —         | ✓             |
-| Generate invite links       | —         | ✓             |
-| Persist per-user settings   | —         | ✓             |
-| Edit/delete a persisted room| —         | ✓             |
+| List my rooms               | -         | ✓             |
+| Generate invite links       | -         | ✓             |
+| Persist per-user settings   | -         | ✓             |
+| Edit/delete a persisted room| -         | ✓             |
 
 Anonymous rooms live in `anonymous_rooms` / `anonymous_participants` and
 expire automatically. Persistent rooms live in `rooms` /
@@ -81,9 +81,9 @@ LiveKit room name space serves both.
    `LIVEKIT_API_SECRET`, scoped to the room name and the participant ID.
 4. Browser opens a WebSocket to `LIVEKIT_FRONTEND_URL`, presents the
    token, and negotiates WebRTC. From this point, media doesn't go through
-   the Go backend — it's browser ↔ LiveKit directly.
+   the Go backend - it's browser ↔ LiveKit directly.
 5. For chat, the browser polls `GET /api/v1/rooms/:id/chat/messages`.
-   Messages are stored in a Redis sorted set with a 6-hour TTL — fast to
+   Messages are stored in a Redis sorted set with a 6-hour TTL - fast to
    read, no schema migration when fields change, and the data evaporates
    when the room is over.
 
@@ -100,7 +100,7 @@ LiveKit room name space serves both.
    marked revoked, a new pair is issued and persisted.
 
 Logout-everywhere is just a `DELETE` over `user_sessions WHERE user_id = ?`
-— stateless access tokens become unusable once their 15-minute window
+- stateless access tokens become unusable once their 15-minute window
 expires.
 
 ## Why LiveKit?
@@ -112,7 +112,7 @@ adaptive bitrate, simulcast, reconnects).
 
 The backend never sees media traffic. It mints scoped JWTs and trusts
 LiveKit to enforce them. This means horizontal scaling of the API is
-trivial — every API node is stateless except for the shared Postgres /
+trivial - every API node is stateless except for the shared Postgres /
 Redis backplane.
 
 For server-side screen sharing (the `/screen-share/` endpoint group), the
@@ -122,16 +122,22 @@ their own (kiosk and demo scenarios).
 
 ## Data model
 
-Important tables (full DDL in `init_db.sql`):
+Schema is managed with [goose](https://github.com/pressly/goose) migrations
+embedded into the binary (`internal/migration/*.sql`). On startup the
+server applies any pending migration before opening the HTTP listener;
+disable that with `MIGRATE_ON_BOOT=false` when a deployment pipeline runs
+`./server migrate up` separately.
 
-- `users`, `user_sessions`, `user_settings` — accounts, refresh tokens,
+Important tables:
+
+- `users`, `user_sessions`, `user_settings` - accounts, refresh tokens,
   per-user device defaults.
-- `rooms`, `room_participants`, `room_invites` — persistent rooms.
-- `chat_messages` — chat for persistent rooms.
-- `participant_stats` — connection quality snapshots (filled from LiveKit
+- `rooms`, `room_participants`, `room_invites` - persistent rooms.
+- `chat_messages` - chat for persistent rooms.
+- `participant_stats` - connection quality snapshots (filled from LiveKit
   telemetry; consumed by the `/stats` endpoints).
-- `audit_log` — append-only event log.
-- `anonymous_rooms`, `anonymous_participants` — ephemeral room state.
+- `audit_log` - append-only event log.
+- `anonymous_rooms`, `anonymous_participants` - ephemeral room state.
 
 Anonymous chat lives entirely in Redis sorted sets keyed by
 `chat:room:<room-id>:messages`, scored by `created_at` in milliseconds.
@@ -143,7 +149,7 @@ The backend follows a standard handler → service → repository split:
 - **Handlers** (`internal/handler`) deal with HTTP. They parse, validate,
   delegate, and serialize. They do not query the database.
 - **Services** (`internal/service`) hold business logic. They depend on
-  repository interfaces — not on `*pgxpool.Pool` directly — so they're
+  repository interfaces - not on `*pgxpool.Pool` directly - so they're
   easy to test.
 - **Repositories** (`internal/repository`) are the only layer that knows
   about Postgres and Redis.
@@ -160,7 +166,7 @@ Everything is environment-driven (`internal/config/config.go`). The
 runtime reads `.env` if present, then overlays real environment
 variables, then validates that critical secrets are non-empty. There is no
 fallback to insecure defaults in `validate()` for JWT secrets or the
-database DSN — the process will refuse to start without them.
+database DSN - the process will refuse to start without them.
 
 ## Graceful shutdown
 
