@@ -1,0 +1,125 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vibemeet_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vibemeet}
+      POSTGRES_USER: ${POSTGRES_USER:-vibemeet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vibemeet} -d ${POSTGRES_DB:-vibemeet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vibemeet_redis_prod
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: vibemeet_livekit_prod
+    restart: unless-stopped
+    command: --bind 0.0.0.0 --config /etc/livekit.yaml --node-ip ${HOST_IP:?HOST_IP is required}
+    ports:
+      - "17880:17880"
+      - "17881:17881"
+      - "17882:17882/udp"
+      - "50000-50050:50000-50050/udp"
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required}: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required}"
+    volumes:
+      - ./livekit.prod.yaml:/etc/livekit.yaml:ro
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --spider -q http://localhost:17880/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vibemeet_backend_prod
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      DATABASE_DSN: postgres://${POSTGRES_USER:-vibemeet}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vibemeet}?sslmode=disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 0
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-168h}
+      LIVEKIT_URL: ws://livekit:17880
+      LIVEKIT_FRONTEND_URL: ${LIVEKIT_FRONTEND_URL:?LIVEKIT_FRONTEND_URL is required}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      LIVEKIT_PORT: ${LIVEKIT_PORT:-17880}
+      HOST_IP: ${HOST_IP}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_healthy
+    networks:
+      - vibemeet_network
+    volumes:
+      - ./web:/app/web:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    container_name: vibemeet_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-18080}:80"
+      - "${HTTPS_PORT:-18443}:443"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - vibemeet_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  vibemeet_network:
+    driver: bridge

@@ -1,0 +1,133 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vibemeet_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vibemeet}
+      POSTGRES_USER: ${POSTGRES_USER:-vibemeet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vibemeet} -d ${POSTGRES_DB:-vibemeet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vibemeet_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: vibemeet_livekit
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0 --config /etc/livekit.yaml --node-ip ${HOST_IP:-127.0.0.1}
+    ports:
+      - "7880:7880"      # HTTP / WebSocket signaling
+      - "7881:7881"      # TCP fallback
+      - "7882:7882/udp"  # WebRTC UDP
+      - "50000-50100:50000-50100/udp"  # RTP media range
+      - "3478:3478/udp"  # STUN
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required}: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required}"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    networks:
+      - vibemeet_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --spider -q http://localhost:7880/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vibemeet_backend
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8081}:8080"
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      DATABASE_DSN: postgres://${POSTGRES_USER:-vibemeet}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vibemeet}?sslmode=disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 0
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-168h}
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_FRONTEND_URL: ""
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      HOST_IP: ${HOST_IP:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_healthy
+    networks:
+      - vibemeet_network
+    volumes:
+      - ./web:/app/web:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate -q -O /dev/null http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    container_name: vibemeet_nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-entrypoint.sh:/docker-entrypoint-nginx.sh:ro
+    entrypoint: ["/bin/sh", "-c", "tr -d '\\r' < /docker-entrypoint-nginx.sh > /tmp/entrypoint.sh && chmod +x /tmp/entrypoint.sh && /tmp/entrypoint.sh"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - vibemeet_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  vibemeet_network:
+    driver: bridge

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Видеоконференция - Комната</title>
+  <link rel="stylesheet" href="css/style.css?v=20251222" />
+</head>
+
+<body>
+  <!-- Загружаем LiveKit SDK перед основным скриптом -->
+  <script>
+    /**
+     * Надёжная загрузка LiveKit SDK с polling-проверкой глобальной переменной
+     * Проблема: SDK может загрузиться, но глобальная переменная появляется асинхронно
+     * Решение: Используем polling с несколькими попытками проверки
+     */
+
+    // Функция проверки наличия LiveKit SDK
+    function findLiveKitSDK() {
+      // Проверяем все возможные варианты глобальной переменной
+      if (window.LivekitClient) return window.LivekitClient;
+      if (window.LiveKitClient) return window.LiveKitClient;
+      if (window.LiveKit) return window.LiveKit;
+      if (window.livekit) return window.livekit;
+      try {
+        if (typeof LivekitClient !== "undefined") return LivekitClient;
+        if (typeof LiveKitClient !== "undefined") return LiveKitClient;
+        if (typeof LiveKit !== "undefined") return LiveKit;
+      } catch (e) { }
+      return null;
+    }
+
+    // Polling-функция для ожидания SDK с максимальным количеством попыток
+    function waitForLiveKitSDK(maxAttempts = 50, interval = 100) {
+      return new Promise((resolve, reject) => {
+        let attempts = 0;
+
+        function check() {
+          attempts++;
+          const sdk = findLiveKitSDK();
+
+          if (sdk) {
+            console.log("LiveKit SDK найден после " + attempts + " попыток:", Object.keys(sdk).slice(0, 5));
+            resolve(sdk);
+            return;
+          }
+
+          if (attempts >= maxAttempts) {
+            reject(new Error("LiveKit SDK не найден после " + maxAttempts + " попыток (" + (maxAttempts * interval) + "ms)"));
+            return;
+          }
+
+          setTimeout(check, interval);
+        }
+
+        check();
+      });
+    }
+
+    // Загрузка скрипта с CDN
+    function loadScriptFromCDN(url) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = false;
+        script.defer = false;
+
+        script.onload = function () {
+          console.log("Скрипт загружен с:", url);
+          resolve();
+        };
+
+        script.onerror = function () {
+          reject(new Error("Ошибка загрузки скрипта: " + url));
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+
+    // Основная функция загрузки LiveKit SDK
+    window.loadLiveKitScript = async function () {
+      // Сначала проверяем, не загружен ли уже
+      const existingSDK = findLiveKitSDK();
+      if (existingSDK) {
+        console.log("LiveKit SDK уже загружен");
+        return existingSDK;
+      }
+
+      const cdnUrls = [
+        'https://unpkg.com/livekit-client@2.8.1/dist/livekit-client.umd.js',
+        'https://cdn.jsdelivr.net/npm/livekit-client@2.8.1/dist/livekit-client.umd.js'
+      ];
+
+      for (const url of cdnUrls) {
+        try {
+          await loadScriptFromCDN(url);
+          console.log("Ожидаем инициализацию LiveKit SDK...");
+
+          // Используем polling для ожидания глобальной переменной
+          const sdk = await waitForLiveKitSDK(50, 100); // 50 попыток по 100ms = 5 секунд макс
+          return sdk;
+        } catch (err) {
+          console.warn("Не удалось загрузить LiveKit с " + url + ":", err.message);
+          continue;
+        }
+      }
+
+      throw new Error("Не удалось загрузить LiveKit SDK ни с одного CDN");
+    };
+
+    // Глобальный Promise для отслеживания состояния загрузки
+    window.liveKitLoadPromise = window.loadLiveKitScript().then(sdk => {
+      window.liveKitSDK = sdk;
+      console.log("LiveKit SDK успешно инициализирован");
+      return sdk;
+    }).catch(err => {
+      console.error("Критическая ошибка загрузки LiveKit:", err);
+      throw err;
+    });
+  </script>
+  <div class="background-aurora"></div>
+  <div class="background-noise"></div>
+
+  <div class="app-root room-root">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-text">
+          <div class="brand-title">Комната</div>
+          <div class="brand-sub" id="room-subtitle">Подключаемся...</div>
+        </div>
+        <button id="copy-room-id-btn" class="copy-id-btn" title="Копировать ссылку на комнату">
+          <img src="copy.png" alt="Copy" class="copy-icon">
+        </button>
+      </div>
+      <div class="top-actions">
+        <span class="status-dot"></span> Live
+      </div>
+    </header>
+
+    <section id="screen-room" class="room-screen">
+      <div id="banner-room" class="top-banner">
+        Пытаемся подключиться к комнате…
+      </div>
+
+      <div class="room-layout">
+        <!-- Стартовый вид -->
+        <div id="room-view-default" class="room-view-default">
+          <!-- Верхняя панель с маленькими участниками -->
+          <div class="participants-top-bar">
+            <button class="participants-scroll-btn participants-scroll-btn--left" id="scroll-left-btn" aria-label="Прокрутить влево">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            <div class="participants-top-list" id="participants-top-list">
+              <!-- Участники будут добавляться динамически -->
+            </div>
+            <button class="participants-scroll-btn participants-scroll-btn--right" id="scroll-right-btn" aria-label="Прокрутить вправо">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Центральный участник (активный говорящий/демонстрирующий) -->
+          <div class="room-main-participant" id="room-main-participant">
+            <!-- Будет заполняться динамически -->
+          </div>
+          
+          <!-- Скрытые элементы для обратной совместимости -->
+          <video id="local-video" autoplay muted playsinline style="display: none;"></video>
+          <video id="remote-video" autoplay playsinline style="display: none;"></video>
+        </div>
+
+        <!-- Вид с чатом -->
+        <div id="room-view-chat" class="room-view-chat hidden">
+          <div class="participants-column" id="chat-participants-column">
+            <!-- Заполняется динамически -->
+          </div>
+
+          <div class="chat-panel glass">
+            <div class="chat-header">
+              <span>Чат комнаты</span>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-row">
+              <input id="chat-input" type="text" placeholder="Написать сообщение..." />
+              <button id="chat-send" class="chat-send-btn" title="Отправить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Вид с демонстрацией экрана -->
+        <div id="room-view-screen" class="room-view-screen hidden">
+          <div class="room-main screen-main glass-tile" id="screen-share-container">
+            <video id="screen-share-video" autoplay playsinline></video>
+          </div>
+          <div class="participants-row">
+            <div class="room-participant glass-tile">
+              <video id="remote-video-screen" autoplay playsinline></video>
+              <div class="room-name">Гость</div>
+            </div>
+            <div class="room-participant room-participant--me glass-tile">
+              <video id="local-video-screen" autoplay muted playsinline></video>
+              <div class="room-name">Я</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Общие кнопки комнаты -->
+        <div class="room-controls-wrapper glass">
+          <div class="room-controls">
+            <div class="circle-btn" id="room-mic" title="Микрофон" data-tip="Включить или выключить микрофон">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm6-3a6 6 0 0 1-12 0M12 18v3"
+                  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div class="circle-btn" id="room-camera" title="Камера" data-tip="Включить или выключить камеру">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="6" width="18" height="13" rx="2.4" stroke-width="1.7" />
+                <circle cx="12" cy="12.5" r="3.3" stroke-width="1.7" />
+                <path d="M9 5.2 9.7 4a1 1 0 0 1 .9-.55h2.8a1 1 0 0 1 .9.55l.7 1.2" stroke-width="1.7"
+                  stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="circle-btn" id="room-screen" title="Демонстрация экрана"
+              data-tip="Поделиться экраном с участниками">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="18" height="13" rx="1.8" stroke-width="1.7" />
+                <path d="M8 19h8M12 11v4m0-4-2 2m2-2 2 2" stroke-width="1.7" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <!-- Кнопка Завершить звонок по центру -->
+            <div class="circle-btn circle-btn--hangup" id="room-leave" title="Завершить звонок"
+              data-tip="Выйти из комнаты">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 15.5c1.7-1 3.9-1.5 7-1.5s5.3.5 7 1.5" stroke="#fff" stroke-width="1.8"
+                  stroke-linecap="round" />
+              </svg>
+            </div>
+
+            <div class="small-rect" id="room-chat" title="Чат" data-tip="Открыть чат с участниками">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 17.5 4 20V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div class="small-rect" id="room-settings" title="Настройки" data-tip="Открыть настройки">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
+              </svg>
+            </div>
+            <div class="small-rect" id="room-participants">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Модальное окно выбора устройств -->
+  <div id="device-settings-modal" class="modal-backdrop hidden">
+    <div class="modal glass">
+      <div class="modal-title">Выбор устройств</div>
+      <div class="modal-content">
+        <div class="device-select-group">
+          <label class="device-label">Камера:</label>
+          <select id="camera-select" class="device-select">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+        <div class="device-select-group">
+          <label class="device-label">Микрофон:</label>
+          <select id="microphone-select" class="device-select">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+        <div class="device-select-group">
+          <label class="device-label">Динамики:</label>
+          <select id="speaker-select" class="device-select">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn--secondary" id="device-settings-cancel">Отмена</button>
+        <button class="modal-btn modal-btn--primary" id="device-settings-apply">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно списка участников -->
+  <div id="participants-modal" class="modal-backdrop hidden">
+    <div class="modal glass">
+      <div class="modal-title">Участники</div>
+      <div class="modal-sub" id="participants-count">Загрузка...</div>
+      <div class="modal-content">
+        <div id="participants-list" class="participants-list">
+          <!-- Список участников будет здесь -->
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn--primary" id="participants-close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/room.js?v=20251222i" defer></script>
+</body>
+
+</html>

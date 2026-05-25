@@ -1,0 +1,15 @@
+.git
+.gitignore
+.github
+.vscode
+.idea
+*.md
+docs/
+.env
+.env.*
+bin/
+dist/
+*.log
+*.bak
+*.backup
+ssl/

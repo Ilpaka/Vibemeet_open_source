@@ -1,0 +1,34 @@
+# LiveKit server configuration — development profile.
+# Reference: https://docs.livekit.io/home/self-hosting/config/
+
+port: 7880
+bind_addresses:
+  - 0.0.0.0
+
+rtc:
+  # Disable external IP discovery via STUN — node-ip is injected explicitly.
+  use_external_ip: false
+
+  # WebRTC media ports.
+  port_range_start: 50000
+  port_range_end: 50100
+  tcp_port: 7881
+  udp_port: 7882
+
+  # ICE Lite simplifies NAT traversal on local networks.
+  use_ice_lite: true
+
+  # Picture Loss Indication throttling by stream quality.
+  pli_throttle:
+    low_quality: 500ms
+    mid_quality: 1s
+    high_quality: 1s
+
+logging:
+  level: debug
+  pion_level: warn
+
+room:
+  empty_timeout: 300
+  departure_timeout: 20
+  auto_create: true

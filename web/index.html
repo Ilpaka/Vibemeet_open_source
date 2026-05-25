@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Видеоконференция - Главная</title>
+    <link rel="stylesheet" href="css/style.css?v=20251222b" />
+  </head>
+  <body>
+    <div class="background-aurora"></div>
+    <div class="background-noise"></div>
+
+    <div class="app-root">
+      <header class="topbar">
+        <div class="brand">
+          <!-- <div class="brand-logo">VK</div> -->
+          <div class="brand-text">
+            <div class="brand-title">Видеоконференции</div>
+            <div class="brand-sub">быстро • безопасно • вместе</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="status-dot"></span> готов к подключению
+        </div>
+      </header>
+
+      <section id="screen-main" class="main-screen">
+        <div class="hero">
+          <div class="hero-content">
+            <p class="eyebrow">Видеоконференция</p>
+            <h1>Создавай комнаты, подключайся, делись экраном - без сложностей</h1>
+            <p class="lede">
+              Лёгкий старт для встреч, обучения и совместной работы. В один клик -
+              новая комната или вход по ID, чат и демонстрация экрана.
+            </p>
+            <div class="cta-row">
+              <button
+                class="btn btn-primary"
+                id="btn-create-room"
+                data-tip="Создать новую комнату"
+              >
+                Создать комнату
+              </button>
+              <button
+                class="btn btn-primary"
+                id="btn-join-room"
+                data-tip="Присоединиться к существующей комнате"
+              >
+                Войти
+              </button>
+            </div>
+            
+            <div class="join-room-section hidden">
+              <div class="join-input-wrapper">
+                <input 
+                  type="text" 
+                  id="room-id-input" 
+                  placeholder="Введите ID комнаты..." 
+                  class="join-input"
+                />
+                <button
+                  type="button"
+                  class="btn btn-primary join-submit-btn"
+                  id="btn-join-submit"
+                >
+                  Присоединиться
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="hero-panel glass">
+            <div class="hero-grid">
+              <div class="hero-tile">
+                <div class="tile-label">Видео</div>
+                <div class="tile-value">HD</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">Экран</div>
+                <div class="tile-value">Share</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">Чат</div>
+                <div class="tile-value">Live</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">ID</div>
+                <div class="tile-value">1 клик</div>
+              </div>
+            </div>
+            <div class="hero-note">ID комнаты покажем при создании и в меню «Участники»</div>
+            
+        </div>
+        <div class="hero-scroll-indicator">
+          <div class="scroll-indicator-content">
+            <span class="scroll-indicator-text">Узнать больше</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      </section>
+    </div>
+            <!-- FAQ секция -->
+      <div class="faq-section">
+        <h2 class="faq-title">Часто задаваемые вопросы</h2>
+              <div class="faq-list">
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="1">
+                    <span>Как создать комнату для видеоконференции?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-1">
+                    <p>Нажмите кнопку "Создать комнату" на главной странице. Вам будет предложено ввести ваше имя, после чего вы автоматически попадете в новую комнату. ID комнаты будет показан в интерфейсе - вы можете поделиться им с другими участниками.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="2">
+                    <span>Как присоединиться к существующей комнате?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-2">
+                    <p>Нажмите кнопку "Войти" и введите ID комнаты в поле "Введите ID комнаты...", нажмите кнопку "Присоединиться". ID комнаты обычно выглядит как UUID (например: 123e4567-e89b-12d3-a456-426614174000). Получить ID можно у создателя комнаты или в меню "Участники".</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="3">
+                    <span>Нужна ли регистрация для использования?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-3">
+                    <p>Нет, регистрация не требуется. Вы можете создавать комнаты и присоединяться к ним анонимно, просто указав ваше имя при входе. Это делает использование сервиса максимально простым и быстрым.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="4">
+                    <span>Как поделиться экраном во время конференции?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-4">
+                    <p>В комнате нажмите кнопку с иконкой экрана в панели управления. Браузер запросит разрешение на демонстрацию экрана - выберите, какой экран или окно вы хотите показать. Остальные участники увидят ваш экран в реальном времени.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="5">
+                    <span>Можно ли отключить камеру или микрофон?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-5">
+                    <p>Да, вы можете в любой момент отключить камеру или микрофон, нажав соответствующие кнопки в панели управления комнаты. Это полезно, если вам нужно временно уйти или уменьшить нагрузку на интернет-соединение.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="6">
+                    <span>Сколько человек может быть в одной комнате?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-6">
+                    <p>Система поддерживает множественных участников. Интерфейс автоматически адаптируется для отображения всех участников. Для больших групп рекомендуется использовать демонстрацию экрана и чат для эффективного взаимодействия.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="7">
+                    <span>Работает ли сервис на мобильных устройствах?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-7">
+                    <p>Да, сервис адаптирован для работы на мобильных устройствах. Вы можете создавать комнаты и присоединяться к ним с телефона или планшета. Интерфейс автоматически подстраивается под размер экрана.</p>
+                  </div>
+                </div>
+                
+                <div class="faq-item glass">
+                  <div class="faq-question" data-faq="8">
+                    <span>Как скопировать ID комнаты?</span>
+                    <button class="faq-toggle">+</button>
+                  </div>
+                  <div class="faq-answer" id="faq-answer-8">
+                    <p>ID комнаты отображается в верхней панели комнаты. Нажмите на кнопку с иконкой копирования рядом с названием комнаты, и ID будет скопирован в буфер обмена. Вы также можете найти ID в меню "Участники".</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+    <script src="js/MainMenu.js?v=20251222d" defer></script>
+  </body>
+</html>
+

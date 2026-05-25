@@ -1,0 +1,40 @@
+# Build artifacts
+/bin/
+/dist/
+server
+server.exe
+*.exe
+
+# Environment files (never commit secrets)
+.env
+.env.local
+.env.prod
+.env.*.local
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs and runtime data
+*.log
+logs/
+tmp/
+temp_*
+
+# TLS material — generate locally, never commit
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+
+# Backups
+*.bak
+*.backup
+
+# Test output and coverage
+*.out
+*.test
+coverage.txt

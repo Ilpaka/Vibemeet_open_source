@@ -1,0 +1,27 @@
+# LiveKit server configuration — production profile.
+# Reference: https://docs.livekit.io/home/self-hosting/config/
+
+port: 17880
+bind_addresses:
+  - 0.0.0.0
+
+rtc:
+  use_external_ip: false
+  port_range_start: 50000
+  port_range_end: 50050
+  tcp_port: 17881
+  udp_port: 17882
+  use_ice_lite: true
+  pli_throttle:
+    low_quality: 500ms
+    mid_quality: 1s
+    high_quality: 1s
+
+logging:
+  level: info
+  pion_level: warn
+
+room:
+  empty_timeout: 300
+  departure_timeout: 20
+  auto_create: true

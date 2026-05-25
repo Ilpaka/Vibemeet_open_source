@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Видеоконференция - Главная</title>
+    <link rel="stylesheet" href="css/style.css?v=20251222" />
+  </head>
+  <body>
+    <div class="background-aurora"></div>
+    <div class="background-noise"></div>
+
+    <div class="app-root">
+      <header class="topbar">
+        <div class="brand">
+          <!-- <div class="brand-logo">VK</div> -->
+          <div class="brand-text">
+            <div class="brand-title">Видеоконференции</div>
+            <div class="brand-sub">быстро • безопасно • вместе</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="status-dot"></span> готов к подключению
+        </div>
+      </header>
+
+      <section id="screen-main" class="main-screen">
+        <div class="hero">
+          <div class="hero-content">
+            <p class="eyebrow">Видеоконференция</p>
+            <h1>Создавай комнаты, подключайся, делись экраном - без сложностей</h1>
+            <p class="lede">
+              Лёгкий старт для встреч, обучения и совместной работы. В один клик -
+              новая комната или вход по ID, чат и демонстрация экрана.
+            </p>
+            <div class="cta-row">
+              <button
+                class="btn btn-primary"
+                id="btn-login-main"
+                data-tip="Войти или создать комнату"
+              >
+                Войти в комнату
+              </button>
+              <button
+                class="btn btn-ghost"
+                id="btn-register-main"
+                data-tip="Зарегистрироваться и сразу войти"
+              >
+                Создать комнату
+              </button>
+            </div>
+          </div>
+          <div class="hero-panel glass">
+            <div class="hero-grid">
+              <div class="hero-tile">
+                <div class="tile-label">Видео</div>
+                <div class="tile-value">HD</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">Экран</div>
+                <div class="tile-value">Share</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">Чат</div>
+                <div class="tile-value">Live</div>
+              </div>
+              <div class="hero-tile">
+                <div class="tile-label">ID</div>
+                <div class="tile-value">1 клик</div>
+              </div>
+            </div>
+            <div class="hero-note">ID комнаты покажем при создании и в меню «Участники»</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script src="js/MainMenu.js?v=20251222" defer></script>
+  </body>
+</html>
+
