@@ -4,7 +4,7 @@
 [![lint](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/lint.yml)
 [![compose](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/compose.yml)
 [![migrate](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/migrate.yml/badge.svg?branch=main)](https://github.com/Ilpaka/Vibemeet_open_source/actions/workflows/migrate.yml)
-[![Go](https://img.shields.io/badge/go-1.21-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Go](https://img.shields.io/badge/go-1.25-00ADD8?logo=go&logoColor=white)](go.mod)
 [![LiveKit](https://img.shields.io/badge/livekit-SFU-FF4D4D)](https://livekit.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -52,7 +52,7 @@ invites, and per-user settings.
 
 | Layer        | Technology                                       |
 | ------------ | ------------------------------------------------ |
-| API server   | Go 1.21, [Gin](https://github.com/gin-gonic/gin) |
+| API server   | Go 1.25, [Gin](https://github.com/gin-gonic/gin) |
 | Database     | PostgreSQL 15 (via `pgx/v5`)                     |
 | Cache / chat | Redis 7                                          |
 | Media server | [LiveKit](https://livekit.io) (self-hosted SFU)  |
